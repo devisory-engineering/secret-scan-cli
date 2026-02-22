@@ -1,4 +1,4 @@
-# secret-scan-cli
+# Secret Scan CLI
 A production-ready Python CLI wrapper around Gitleaks for scanning multiple local repositories, generating a branded HTML report, and publishing a **sanitized** findings payload to Cloudvisor.
 
 ## Why this exists
