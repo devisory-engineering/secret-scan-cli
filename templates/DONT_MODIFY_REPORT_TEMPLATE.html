@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cloudvisor Secret Scan Report</title>
+  <style>
+    :root {
+      --cv-ink: #0a1535;
+      --cv-ink-soft: #192b63;
+      --cv-sky: #ff5600;
+      --cv-sky-soft: #fff1ea;
+      --cv-accent: #ff9f1a;
+      --cv-danger: #d93025;
+      --cv-bg: #f3f7ff;
+      --cv-white: #ffffff;
+      --cv-text: #1b2645;
+      --cv-muted: #5f6d93;
+      --cv-border: #d8e1f7;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background:
+        radial-gradient(circle at 10% 0%, rgba(255, 86, 0, 0.14), transparent 30%),
+        radial-gradient(circle at 90% 0%, rgba(255, 159, 26, 0.14), transparent 32%),
+        var(--cv-bg);
+      color: var(--cv-text);
+      padding: 24px;
+    }
+    .container {
+      max-width: 1320px;
+      margin: 0 auto;
+    }
+    .hero {
+      background: linear-gradient(135deg, var(--cv-ink), var(--cv-ink-soft));
+      color: var(--cv-white);
+      border-radius: 16px;
+      padding: 24px 28px;
+      box-shadow: 0 20px 40px rgba(10, 21, 53, 0.24);
+      margin-bottom: 18px;
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(255, 159, 26, 0.14);
+      border: 1px solid rgba(255, 159, 26, 0.45);
+      color: #ffd9a1;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    h1 {
+      margin: 0 0 6px 0;
+      font-size: 30px;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .brand-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .brand-logo {
+      height: 34px;
+      width: auto;
+      display: block;
+      filter: brightness(0) invert(1);
+      opacity: 0.95;
+    }
+    .title-icon {
+      font-size: 28px;
+      line-height: 1;
+    }
+    .summary {
+      background: var(--cv-white);
+      border: 1px solid var(--cv-border);
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 10px 26px rgba(20, 45, 110, 0.08);
+      margin-bottom: 16px;
+    }
+    .summary p {
+      margin: 8px 0;
+      color: var(--cv-muted);
+      font-size: 14px;
+    }
+    .summary strong {
+      color: var(--cv-text);
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+      margin: 18px 0;
+    }
+    .stat-card {
+      background: var(--cv-white);
+      border: 1px solid var(--cv-border);
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 10px 22px rgba(20, 45, 110, 0.08);
+    }
+    .stat-number {
+      font-size: 34px;
+      font-weight: 800;
+      line-height: 1;
+      color: var(--cv-ink);
+      margin-bottom: 8px;
+    }
+    .stat-label {
+      color: var(--cv-muted);
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      font-weight: 700;
+    }
+    .table-wrap {
+      background: var(--cv-white);
+      border-radius: 12px;
+      border: 1px solid var(--cv-border);
+      box-shadow: 0 10px 26px rgba(20, 45, 110, 0.08);
+      overflow: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 980px;
+    }
+    th {
+      background: linear-gradient(180deg, var(--cv-sky), #db4a00);
+      color: var(--cv-white);
+      padding: 12px;
+      text-align: left;
+      font-size: 13px;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--cv-border);
+      font-size: 13px;
+      color: var(--cv-text);
+      vertical-align: top;
+    }
+    tr:hover {
+      background: var(--cv-sky-soft);
+    }
+    .high {
+      color: var(--cv-danger);
+      font-weight: 700;
+    }
+    .code {
+      background: #fff6e9;
+      border: 1px solid #ffe1b3;
+      padding: 4px 6px;
+      border-radius: 6px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 11px;
+      word-break: break-all;
+      color: #7a4300;
+      display: inline-block;
+    }
+    .description {
+      color: var(--cv-muted);
+      font-size: 12px;
+      max-width: 360px;
+    }
+    .privacy-note {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      color: #e8f0ff;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .privacy-note strong {
+      color: #ffffff;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="hero">
+      <div class="badge">Cloudvisor Security</div>
+      <div class="brand-row">
+        <h1><span class="title-icon">🛡️</span>Secrets Scan Report</h1>
+        <img
+          class="brand-logo"
+          src="https://cloudvisor.co/wp-content/uploads/2022/09/logo-cloudvisor.svg"
+          alt="Cloudvisor"
+          loading="lazy"
+        />
+      </div>
+      <div class="privacy-note">
+        <strong>Privacy by design:</strong> Only redacted findings metadata is published for centralized reporting.
+        Raw source code and full secret values never leave your environment.
+      </div>
+    </div>
+    <div class="summary">
+      <p><strong>Scan Date:</strong> $scan_date</p>
+      <p><strong>Scanned Repositories Directory:</strong> $repos_path</p>
+    </div>
+    <div class="stats">
+      <div class="stat-card"><div class="stat-number">$total_findings</div><div class="stat-label">Total Secrets Found</div></div>
+      <div class="stat-card"><div class="stat-number">$scanned_repos</div><div class="stat-label">Repositories Affected</div></div>
+      <div class="stat-card"><div class="stat-number">$secret_types</div><div class="stat-label">Secret Types</div></div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <tr>
+          <th>#</th>
+          <th>Repository</th>
+          <th>File</th>
+          <th>Line</th>
+          <th>Secret Type</th>
+          <th>Description</th>
+          <th>Redacted Secret</th>
+          <th>Commit</th>
+          <th>Author</th>
+        </tr>
+        $rows
+      </table>
+    </div>
+  </div>
+</body>
+</html>
