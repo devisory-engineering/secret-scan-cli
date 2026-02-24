@@ -24,7 +24,7 @@ from urllib.parse import urlencode
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen, urlretrieve
 
-GITLEAKS_VERSION = "8.18.2"
+GITLEAKS_VERSION = "8.30.0"
 GITLEAKS_BASE_URL = "https://github.com/gitleaks/gitleaks/releases/download"
 REPORT_TEMPLATE_FILENAME = "templates/DONT_MODIFY_REPORT_TEMPLATE.html"
 DEFAULT_SQS_URL = "https://sqs.eu-central-1.amazonaws.com/937764685191/secrets-scan-report"
@@ -354,6 +354,13 @@ def load_report_template() -> Template:
     return Template(template_path.read_text(encoding="utf-8"))
 
 
+def format_local_timestamp() -> str:
+    local_now = datetime.now().astimezone()
+    offset = local_now.strftime("%z")
+    formatted_offset = f"{offset[:3]}:{offset[3:]}" if len(offset) == 5 else offset
+    return f"{local_now.strftime('%B %d, %Y, %H:%M:%S')} (UTC{formatted_offset})"
+
+
 def generate_html_report(all_findings: list[dict[str, Any]], repos_path: Path, output_path: Path) -> Path:
     scanned_repos = len(set(f.get("repo") for f in all_findings if f.get("repo")))
     secret_types = len(set(f.get("RuleID") for f in all_findings if f.get("RuleID")))
@@ -395,7 +402,7 @@ def generate_html_report(all_findings: list[dict[str, Any]], repos_path: Path, o
         rows.append(row)
 
     html_report = load_report_template().substitute(
-        scan_date=_escape(datetime.now().strftime("%Y-%m-%d %H:%M:%S")),
+        scan_date=_escape(format_local_timestamp()),
         repos_path=_escape(repos_path),
         total_findings=_escape(len(all_findings)),
         scanned_repos=_escape(scanned_repos),
@@ -427,7 +434,7 @@ def build_json_report(
     findings_items = [sanitize_finding_for_cloud(finding) for finding in all_findings]
     report = {
         "schema": "cloudvisor.secret-scan-report.v1",
-        "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "generated_at": format_local_timestamp(),
         "repos_path": str(repos_path),
         "summary": {
             "total_findings": len(findings_items),
@@ -578,6 +585,24 @@ def resolve_gitleaks_path(custom_path: Path | None, script_dir: Path) -> Path:
     return download_gitleaks(script_dir)
 
 
+def open_report_file(report_path: Path) -> None:
+    try:
+        if platform.system() == "Darwin":
+            subprocess.run(["open", str(report_path)], check=False)
+        elif platform.system() == "Windows":
+            os.startfile(str(report_path))  # type: ignore[attr-defined]
+        else:
+            subprocess.run(["xdg-open", str(report_path)], check=False)
+    except Exception as exc:
+        print(
+            colorize(
+                f"Warning: Could not open report automatically: {exc}",
+                ANSI_YELLOW,
+            ),
+            file=sys.stderr,
+        )
+
+
 def main() -> int:
     global COLOR_ENABLED
     args = parse_args()
@@ -616,6 +641,7 @@ def main() -> int:
 
     report_path = generate_html_report(all_findings, repos_path, output_path)
     print(colorize(f"Report generated: {report_path}", ANSI_GREEN))
+    open_report_file(report_path)
 
     if json_output_path is not None:
         json_report_path = write_json_report(report_json, json_output_path)
